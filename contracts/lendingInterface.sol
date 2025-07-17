@@ -741,7 +741,7 @@ contract lendingInterface {
         }
 
     }
-    //-----------------------------------------Operation 2 can use CFX---------------------------------------------
+    //-----------------------------------------Operation 2 can use 0g---------------------------------------------
     //  Assets Deposit
     function assetsDeposit2(address tokenAddr, uint amount) external payable {
         if (tokenAddr == A0GI) {
@@ -777,7 +777,7 @@ contract lendingInterface {
         if (address(this).balance > 0) {
             address payable receiver = payable(msg.sender); // Set receiver
             (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: CFX Transfer Failed");
+            require(success, "Lending Interface: 0g Transfer Failed");
         }
 
     }
@@ -800,7 +800,7 @@ contract lendingInterface {
         if (address(this).balance > 0) {
             address payable receiver = payable(msg.sender); // Set receiver
             (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: CFX Transfer Failed");
+            require(success, "Lending Interface: 0g Transfer Failed");
         }
 
     }
@@ -826,7 +826,7 @@ contract lendingInterface {
         if (address(this).balance > 0) {
             address payable receiver = payable(msg.sender); // Set receiver
             (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: CFX Transfer Failed");
+            require(success, "Lending Interface: 0g Transfer Failed");
         }
 
     }
@@ -848,7 +848,7 @@ contract lendingInterface {
         if (address(this).balance > 0) {
             address payable receiver = payable(msg.sender); // Set receiver
             (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: CFX Transfer Failed");
+            require(success, "Lending Interface: 0g Transfer Failed");
         }
 
     }
@@ -886,7 +886,7 @@ contract lendingInterface {
         if (address(this).balance > 0) {
             address payable receiver = payable(msg.sender); // Set receiver
             (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: CFX Transfer Failed");
+            require(success, "Lending Interface: 0g Transfer Failed");
         }
 
     }
@@ -927,7 +927,7 @@ contract lendingInterface {
         if (address(this).balance > 0) {
             address payable receiver = payable(msg.sender); // Set receiver
             (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: CFX Transfer Failed");
+            require(success, "Lending Interface: 0g Transfer Failed");
         }
 
     }

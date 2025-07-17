@@ -13,8 +13,8 @@ interface iLendingManager{
         uint    bestDepositInterestRate ; // MAX = UPPER_SYSTEM_LIMIT , setting NOT more than 1000
         uint    maxLendingAmountInRIM;    // default is 0, means no limits; if > 0, have limits : 1 ether = 1 slc
         uint    reserveFactor;            //  default is 1000, (10%)
-        uint8   lendingModeNum;           // Risk Isolation Mode: 1 ; SLC  USDT  USDC : 2  ;  CFX  xCFX sxCFX : 3
-        uint    homogeneousModeLTV;       // SLC  USDT  USDC : 97%  ; CFX  xCFX sxCFX : 95%
+        uint8   lendingModeNum;           // Risk Isolation Mode: 1 ;  USDT  USDC : 2  ; 
+        uint    homogeneousModeLTV;       // USDT  USDC : 97%  ; 
     }
 
     struct assetInfo{

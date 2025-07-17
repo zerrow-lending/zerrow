@@ -68,7 +68,7 @@ contract lendingVaults  {
         if(address(this).balance>0){
             address payable receiver = payable(_to); // Set receiver
             (bool success, ) = receiver.call{value:address(this).balance}("");
-            require(success,"Lending Interface: CFX Transfer Failed");
+            require(success,"Lending Interface: 0g Transfer Failed");
         }
     }
 
