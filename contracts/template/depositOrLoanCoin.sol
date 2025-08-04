@@ -101,15 +101,15 @@ contract depositOrLoanCoin is ERC20NoTransfer {
         burnTokens = iLendingManager(manager).getCoinValues(OCoin)[depositOrLoan];
 
         burnTokens = _value * 1 ether / burnTokens;
-        if(userOQCAmount[_account] - burnTokens == 1){
+        if(userOQCAmount[_account] == burnTokens + 1){
             burnTokens += 1;
         }
-        if(userOQCAmount[_account] - burnTokens > 0){
+        if(userOQCAmount[_account] > burnTokens ){
             userOQCAmount[_account] -= burnTokens;
         }else{
             userOQCAmount[_account] = 0;
         }
-        if(OQCtotalSupply - burnTokens > 0){
+        if(OQCtotalSupply > burnTokens ){
             OQCtotalSupply -= burnTokens;
         }else{
             OQCtotalSupply = 0;
