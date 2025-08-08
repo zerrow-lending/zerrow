@@ -38,7 +38,7 @@ contract lendingManager  {
 
     //  Assets Init:          USDT  USDC  BTC   ETH   0g
     //  MaximumLTV:            95%   95%  80%   75%  50%
-    //  LiqPenalty:             3%    3%   4%    4%  10%
+    //  LiqPenalty:             3%    3%   5%    5%  10%
     //maxLendingAmountInRIM:     0     0    0     0   1k
     //bestLendingRatio:        76%   76%  70%   70%  50%
     //lendingModeNum:            2     2    4     5    3
@@ -67,6 +67,9 @@ contract lendingManager  {
         uint    latestTimeStamp;          // Latest TimeStamp
     }
 
+    mapping (address=>bool) public xInterface;
+
+
     mapping(address => licensedAsset) public licensedAssets;
     mapping(address => address[2]) public assetsDepositAndLend;
     address[] public assetsSerialNumber;
@@ -85,7 +88,12 @@ contract lendingManager  {
         require(msg.sender == setter, 'Lending Manager: Only Setter Use');
         _;
     }
-
+    modifier onlyInterface(address user) {
+    if(xInterface[msg.sender] == false){
+        require(user == msg.sender,"Lending Manager: Not slcInterface or user, need be msg.sender!");
+        }
+        _;
+    }
     //----------------------------- event -----------------------------
     event AssetsDeposit(address indexed tokenAddr, uint amount, address user);
     event WithdrawDeposit(address indexed tokenAddr, uint amount, address user);
@@ -101,7 +109,8 @@ contract lendingManager  {
                                 uint _homogeneousModeLTV,
                                 uint _bestDepositInterestRate) ;
     event UserModeSetting(address indexed user,uint8 _mode,address _userRIMAssetsAddress);
-    event LendingInterfaceSetup(address indexed _interface);
+    // event LendingInterfaceSetup(address indexed _interface);
+    event InterfaceSetup(address _xInterface, bool _ToF);
     event FloorOfHealthFactorSetup(uint nomal, uint homogeneous);
     event DepositAndLoanInterest(address indexed token, 
                                  uint latestDepositInterest, 
@@ -144,10 +153,10 @@ contract lendingManager  {
         riskIsolationModeAcceptAssets = _riskIsolationModeAcceptAssets;
     }
 
-    function updatelendingInterface(address _interface) external onlySetter{
+    function xInterfacesetting(address _xInterface, bool _ToF)external onlySetter{
         require(isContract(_interface),"Lending Manager: Interface MUST be a contract.");
-        lendingInterface = _interface;
-        emit LendingInterfaceSetup(_interface);
+        xInterface[_xInterface] = _ToF;
+        emit InterfaceSetup( _xInterface, _ToF);
     }
     
     function setFloorOfHealthFactor(uint nomal, uint homogeneous) external onlySetter{
@@ -237,10 +246,13 @@ contract lendingManager  {
                                  _bestDepositInterestRate) ;
     }
 
-    function userModeSetting(uint8 _mode,address _userRIMAssetsAddress, address user) public {
-        if(lendingInterface != msg.sender){
-            require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
-        }
+    function userModeSetting(uint8 _mode,address _userRIMAssetsAddress, address user) public onlyInterface(user){
+        // if(xInterface[msg.sender] == false){
+        //     require(latestBlockNumber < block.number,"X Swap Vaults: Same block can't have Two exchange");
+        // }
+        // if(lendingInterface != msg.sender){
+        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
+        // }
         require(_userTotalLendingValue(user) == 0 && _userTotalDepositValue(user) == 0,"Lending Manager: should return all Lending Assets and withdraw all Deposit Assets.");
 
         if(_mode == 1){
@@ -410,11 +422,11 @@ contract lendingManager  {
     }
 
     //  Assets Deposit
-    function assetsDeposit(address tokenAddr, uint amount, address user) public  {
+    function assetsDeposit(address tokenAddr, uint amount, address user) public  onlyInterface(user){
         uint amountNormalize = amount * 1 ether / (10**iDecimals(tokenAddr).decimals());
-        if(lendingInterface != msg.sender){
-            require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
-        }
+        // if(lendingInterface != msg.sender){
+        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
+        // }
         require(amount > 0,"Lending Manager: Cant Pledge 0 amount");
         if(userMode[user] == 0){
             require(licensedAssets[tokenAddr].maxLendingAmountInRIM == 0,"Lending Manager: Wrong Token in Risk Isolation Mode");
@@ -433,11 +445,11 @@ contract lendingManager  {
     }
 
     // Withdrawal of deposits
-    function withdrawDeposit(address tokenAddr, uint amount, address user) public  {
+    function withdrawDeposit(address tokenAddr, uint amount, address user) public onlyInterface(user) {
         uint amountNormalize = amount * 1 ether / (10**iDecimals(tokenAddr).decimals());
-        if(lendingInterface != msg.sender){
-            require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
-        }
+        // if(lendingInterface != msg.sender){
+        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
+        // }
         require(amount > 0,"Lending Manager: Cant Pledge 0 amount");
         // There is no need to check the mode
 
@@ -459,12 +471,12 @@ contract lendingManager  {
     }
 
     // lend Asset
-    function lendAsset(address tokenAddr, uint amount, address user) public  {
+    function lendAsset(address tokenAddr, uint amount, address user) public onlyInterface(user) {
         uint amountNormalize = amount * 1 ether / (10**iDecimals(tokenAddr).decimals());
 
-        if(lendingInterface != msg.sender){
-            require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
-        }
+        // if(lendingInterface != msg.sender){
+        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
+        // }
         require(amount > 0,"Lending Manager: Cant Pledge 0 amount");
 
         if(userMode[user] == 1){
@@ -499,12 +511,12 @@ contract lendingManager  {
     }
 
     // repay Loan
-    function repayLoan(address tokenAddr,uint amount, address user) public  {
+    function repayLoan(address tokenAddr,uint amount, address user) public onlyInterface(user) {
         uint amountNormalize = amount * 1 ether / (10**iDecimals(tokenAddr).decimals());
 
-        if(lendingInterface != msg.sender){
-            require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
-        }
+        // if(lendingInterface != msg.sender){
+        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
+        // }
         require(amount > 0,"Lending Manager: Cant Pledge 0 amount");
 
         if(userMode[user] == 1){
