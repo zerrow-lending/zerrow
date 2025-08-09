@@ -25,7 +25,7 @@ contract lendingManager  {
     address public coinFactory;
     address public lendingVault;
     address public coreAlgorithm;
-    address public lendingInterface;
+    // address public lendingInterface;
 
     address public setter;
     address newsetter;
@@ -90,7 +90,7 @@ contract lendingManager  {
     }
     modifier onlyInterface(address user) {
     if(xInterface[msg.sender] == false){
-        require(user == msg.sender,"Lending Manager: Not slcInterface or user, need be msg.sender!");
+        require(user == msg.sender,"Lending Manager: msg.sender Not slcInterface or user !");
         }
         _;
     }
@@ -247,12 +247,6 @@ contract lendingManager  {
     }
 
     function userModeSetting(uint8 _mode,address _userRIMAssetsAddress, address user) public onlyInterface(user){
-        // if(xInterface[msg.sender] == false){
-        //     require(latestBlockNumber < block.number,"X Swap Vaults: Same block can't have Two exchange");
-        // }
-        // if(lendingInterface != msg.sender){
-        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
-        // }
         require(_userTotalLendingValue(user) == 0 && _userTotalDepositValue(user) == 0,"Lending Manager: should return all Lending Assets and withdraw all Deposit Assets.");
 
         if(_mode == 1){
@@ -422,10 +416,10 @@ contract lendingManager  {
     }
 
     //  Assets Deposit
-    function assetsDeposit(address tokenAddr, uint amount, address user) public  onlyInterface(user){
+    function assetsDeposit(address tokenAddr, uint amount, address user) public onlyInterface(user) {
         uint amountNormalize = amount * 1 ether / (10**iDecimals(tokenAddr).decimals());
-        // if(lendingInterface != msg.sender){
-        //     require(user == msg.sender,"Lending Manager: Not slcInterface or user need be msg.sender!");
+        // if(xInterface[msg.sender] == false){
+        //     require(user == msg.sender,"Lending Manager: Not Interface or user need be msg.sender!");
         // }
         require(amount > 0,"Lending Manager: Cant Pledge 0 amount");
         if(userMode[user] == 0){
