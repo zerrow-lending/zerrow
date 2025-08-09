@@ -154,7 +154,7 @@ contract lendingManager  {
     }
 
     function xInterfacesetting(address _xInterface, bool _ToF)external onlySetter{
-        require(isContract(_interface),"Lending Manager: Interface MUST be a contract.");
+        require(isContract(_xInterface),"Lending Manager: Interface MUST be a contract.");
         xInterface[_xInterface] = _ToF;
         emit InterfaceSetup( _xInterface, _ToF);
     }

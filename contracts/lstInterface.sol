@@ -645,57 +645,24 @@ contract lstInterface {
     }
 
     //------------------------------------------------Operation----------------------------------------------------
-    function userModeSetting(
-        uint8 _mode,
-        address _userRIMAssetsAddress
-    ) external {
-        iLendingManager(lendingManager).userModeSetting(
-            _mode,
-            _userRIMAssetsAddress,
-            msg.sender
-        );
-
-    }
-    //  Assets Deposit
-    function assetsDeposit(address tokenAddr, uint amount) public {
-        IERC20(tokenAddr).safeTransferFrom(msg.sender, address(this), amount);
-        IERC20(tokenAddr).approve(lendingManager, amount);
-        iLendingManager(lendingManager).assetsDeposit(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-
-    }
-    // Withdrawal of deposits
-    function withdrawDeposit(address tokenAddr, uint amount) external {
-        iLendingManager(lendingManager).withdrawDeposit(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-
-    }
-    // function withdrawDepositMax(address tokenAddr) external {
-    //     address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
-    //     uint tokenBalance = IERC20(depositAndLend[0]).balanceOf(
-    //         address(msg.sender)
+    // function userModeSetting(
+    //     uint8 _mode,
+    //     address _userRIMAssetsAddress
+    // ) external {
+    //     iLendingManager(lendingManager).userModeSetting(
+    //         _mode,
+    //         _userRIMAssetsAddress,
+    //         msg.sender
     //     );
-    //     iLendingManager(lendingManager).withdrawDeposit(
+
+    // }
+    // //  Assets Deposit
+    // function assetsDeposit(address tokenAddr, uint amount) public {
+    //     IERC20(tokenAddr).safeTransferFrom(msg.sender, address(this), amount);
+    //     IERC20(tokenAddr).approve(lendingManager, amount);
+    //     iLendingManager(lendingManager).assetsDeposit(
     //         tokenAddr,
-    //         tokenBalance,
+    //         amount,
     //         msg.sender
     //     );
     //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
@@ -706,52 +673,43 @@ contract lstInterface {
     //     }
 
     // }
-    // lend Asset
-    function lendAsset(address tokenAddr, uint amount) external {
-        iLendingManager(lendingManager).lendAsset(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-
-    }
-    // repay Loan
-    function repayLoan(address tokenAddr, uint amount) external {
-        IERC20(tokenAddr).safeTransferFrom(msg.sender, address(this), amount);
-        IERC20(tokenAddr).approve(lendingManager, amount);
-        iLendingManager(lendingManager).repayLoan(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-
-    }
-    // function repayLoanMax(address tokenAddr) external {
-    //     address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
-    //     uint tokenBalance = IERC20(depositAndLend[1]).balanceOf(
-    //         address(msg.sender)
+    // // Withdrawal of deposits
+    // function withdrawDeposit(address tokenAddr, uint amount) external {
+    //     iLendingManager(lendingManager).withdrawDeposit(
+    //         tokenAddr,
+    //         amount,
+    //         msg.sender
     //     );
-    //     IERC20(tokenAddr).safeTransferFrom(
-    //         msg.sender,
-    //         address(this),
-    //         tokenBalance
+    //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
+    //         IERC20(tokenAddr).safeTransfer(
+    //             msg.sender,
+    //             IERC20(tokenAddr).balanceOf(address(this))
+    //         );
+    //     }
+
+    // }
+    // // lend Asset
+    // function lendAsset(address tokenAddr, uint amount) external {
+    //     iLendingManager(lendingManager).lendAsset(
+    //         tokenAddr,
+    //         amount,
+    //         msg.sender
     //     );
-    //     IERC20(tokenAddr).approve(lendingManager, tokenBalance);
+    //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
+    //         IERC20(tokenAddr).safeTransfer(
+    //             msg.sender,
+    //             IERC20(tokenAddr).balanceOf(address(this))
+    //         );
+    //     }
+
+    // }
+    // // repay Loan
+    // function repayLoan(address tokenAddr, uint amount) external {
+    //     IERC20(tokenAddr).safeTransferFrom(msg.sender, address(this), amount);
+    //     IERC20(tokenAddr).approve(lendingManager, amount);
     //     iLendingManager(lendingManager).repayLoan(
     //         tokenAddr,
-    //         tokenBalance,
+    //         amount,
     //         msg.sender
     //     );
     //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
@@ -764,177 +722,49 @@ contract lstInterface {
     // }
     //-----------------------------------------Operation 2 can use 0g---------------------------------------------
     //  Assets Deposit
-    function assetsDeposit2(address tokenAddr, uint amount) external payable {
-        if (tokenAddr == A0GI) {
-            require(
-                amount <= msg.value,
-                "Lending Interface: amount should == msg.value"
-            );
-            iwA0GI(A0GI).deposit{value: amount}();
-        } else {
-            require(msg.value == 0, "Lending Interface: msg.value should == 0");
-            IERC20(tokenAddr).safeTransferFrom(
-                msg.sender,
-                address(this),
-                amount
-            );
-        }
-
-        IERC20(tokenAddr).approve(lendingManager, amount);
-        iLendingManager(lendingManager).assetsDeposit(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(A0GI).balanceOf(address(this)) > 0) {
-            iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
-        }
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-        if (address(this).balance > 0) {
-            address payable receiver = payable(msg.sender); // Set receiver
-            (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: 0g Transfer Failed");
-        }
-
-    }
-    // Withdrawal of deposits
-    function withdrawDeposit2(address tokenAddr, uint amount) external {
-        iLendingManager(lendingManager).withdrawDeposit(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(A0GI).balanceOf(address(this)) > 0) {
-            iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
-        }
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-        if (address(this).balance > 0) {
-            address payable receiver = payable(msg.sender); // Set receiver
-            (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: 0g Transfer Failed");
-        }
-
-    }
-    // function withdrawDepositMax2(address tokenAddr) external {
-    //     address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
-    //     uint tokenBalance = IERC20(depositAndLend[0]).balanceOf(
-    //         address(msg.sender)
-    //     );
-    //     iLendingManager(lendingManager).withdrawDeposit(
-    //         tokenAddr,
-    //         tokenBalance,
-    //         msg.sender
-    //     );
-    //     if (IERC20(A0GI).balanceOf(address(this)) > 0) {
-    //         iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
-    //     }
-    //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-    //         IERC20(tokenAddr).safeTransfer(
-    //             msg.sender,
-    //             IERC20(tokenAddr).balanceOf(address(this))
-    //         );
-    //     }
-    //     if (address(this).balance > 0) {
-    //         address payable receiver = payable(msg.sender); // Set receiver
-    //         (bool success, ) = receiver.call{value: address(this).balance}("");
-    //         require(success, "Lending Interface: 0g Transfer Failed");
-    //     }
-
-    // }
-
-    // lend Asset
-    function lendAsset2(address tokenAddr, uint amount) public {
-        iLendingManager(lendingManager).lendAsset(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(A0GI).balanceOf(address(this)) > 0) {
-            iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
-        } else if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-        if (address(this).balance > 0) {
-            address payable receiver = payable(msg.sender); // Set receiver
-            (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: 0g Transfer Failed");
-        }
-
-    }
-    // repay Loan
-    function repayLoan2(address tokenAddr, uint amount) external payable {
-        if (tokenAddr == A0GI) {
-            require(
-                amount <= msg.value,
-                "Lending Interface: amount should == msg.value"
-            );
-            iwA0GI(A0GI).deposit{value: amount}();
-        } else {
-            require(msg.value == 0, "Lending Interface: msg.value should == 0");
-            IERC20(tokenAddr).safeTransferFrom(
-                msg.sender,
-                address(this),
-                amount
-            );
-        }
-        IERC20(tokenAddr).approve(lendingManager, amount);
-        iLendingManager(lendingManager).repayLoan(
-            tokenAddr,
-            amount,
-            msg.sender
-        );
-        if (IERC20(A0GI).balanceOf(address(this)) > 0) {
-            iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
-        }
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
-        }
-        if (address(this).balance > 0) {
-            address payable receiver = payable(msg.sender); // Set receiver
-            (bool success, ) = receiver.call{value: address(this).balance}("");
-            require(success, "Lending Interface: 0g Transfer Failed");
-        }
-
-    }
-    // function repayLoanMax2(address tokenAddr) external payable {
-    //     address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
-    //     uint tokenBalance = IERC20(depositAndLend[1]).balanceOf(
-    //         address(msg.sender)
-    //     );
+    // function assetsDeposit2(address tokenAddr, uint amount) external payable {
     //     if (tokenAddr == A0GI) {
     //         require(
-    //             tokenBalance <= msg.value,
+    //             amount <= msg.value,
     //             "Lending Interface: amount should == msg.value"
     //         );
-    //         iwA0GI(A0GI).deposit{value: tokenBalance}();
+    //         iwA0GI(A0GI).deposit{value: amount}();
     //     } else {
     //         require(msg.value == 0, "Lending Interface: msg.value should == 0");
     //         IERC20(tokenAddr).safeTransferFrom(
     //             msg.sender,
     //             address(this),
-    //             tokenBalance
+    //             amount
     //         );
     //     }
-    //     IERC20(tokenAddr).approve(lendingManager, tokenBalance);
-    //     iLendingManager(lendingManager).repayLoan(
+
+    //     IERC20(tokenAddr).approve(lendingManager, amount);
+    //     iLendingManager(lendingManager).assetsDeposit(
     //         tokenAddr,
-    //         tokenBalance,
+    //         amount,
+    //         msg.sender
+    //     );
+    //     if (IERC20(A0GI).balanceOf(address(this)) > 0) {
+    //         iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
+    //     }
+    //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
+    //         IERC20(tokenAddr).safeTransfer(
+    //             msg.sender,
+    //             IERC20(tokenAddr).balanceOf(address(this))
+    //         );
+    //     }
+    //     if (address(this).balance > 0) {
+    //         address payable receiver = payable(msg.sender); // Set receiver
+    //         (bool success, ) = receiver.call{value: address(this).balance}("");
+    //         require(success, "Lending Interface: 0g Transfer Failed");
+    //     }
+
+    // }
+    // // Withdrawal of deposits
+    // function withdrawDeposit2(address tokenAddr, uint amount) external {
+    //     iLendingManager(lendingManager).withdrawDeposit(
+    //         tokenAddr,
+    //         amount,
     //         msg.sender
     //     );
     //     if (IERC20(A0GI).balanceOf(address(this)) > 0) {
@@ -954,6 +784,66 @@ contract lstInterface {
 
     // }
 
+    // // lend Asset
+    // function lendAsset2(address tokenAddr, uint amount) public {
+    //     iLendingManager(lendingManager).lendAsset(
+    //         tokenAddr,
+    //         amount,
+    //         msg.sender
+    //     );
+    //     if (IERC20(A0GI).balanceOf(address(this)) > 0) {
+    //         iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
+    //     } else if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
+    //         IERC20(tokenAddr).safeTransfer(
+    //             msg.sender,
+    //             IERC20(tokenAddr).balanceOf(address(this))
+    //         );
+    //     }
+    //     if (address(this).balance > 0) {
+    //         address payable receiver = payable(msg.sender); // Set receiver
+    //         (bool success, ) = receiver.call{value: address(this).balance}("");
+    //         require(success, "Lending Interface: 0g Transfer Failed");
+    //     }
+
+    // }
+    // // repay Loan
+    // function repayLoan2(address tokenAddr, uint amount) external payable {
+    //     if (tokenAddr == A0GI) {
+    //         require(
+    //             amount <= msg.value,
+    //             "Lending Interface: amount should == msg.value"
+    //         );
+    //         iwA0GI(A0GI).deposit{value: amount}();
+    //     } else {
+    //         require(msg.value == 0, "Lending Interface: msg.value should == 0");
+    //         IERC20(tokenAddr).safeTransferFrom(
+    //             msg.sender,
+    //             address(this),
+    //             amount
+    //         );
+    //     }
+    //     IERC20(tokenAddr).approve(lendingManager, amount);
+    //     iLendingManager(lendingManager).repayLoan(
+    //         tokenAddr,
+    //         amount,
+    //         msg.sender
+    //     );
+    //     if (IERC20(A0GI).balanceOf(address(this)) > 0) {
+    //         iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
+    //     }
+    //     if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
+    //         IERC20(tokenAddr).safeTransfer(
+    //             msg.sender,
+    //             IERC20(tokenAddr).balanceOf(address(this))
+    //         );
+    //     }
+    //     if (address(this).balance > 0) {
+    //         address payable receiver = payable(msg.sender); // Set receiver
+    //         (bool success, ) = receiver.call{value: address(this).balance}("");
+    //         require(success, "Lending Interface: 0g Transfer Failed");
+    //     }
+
+    // }
 
     //=======================================stake for Gimo=============================================
     // interface iLstGimo{
@@ -964,7 +854,7 @@ contract lstInterface {
     //-----------------------------------------loop for assets---------------------------------------------
     //  Assets single Lst Deposit
     function lstStake(address stakeToken) public payable {
-        // iwA0GI(A0GI).deposit{value: amount}();
+
         if(stakeToken == gToken){
             iLstGimo(lstGimo).stake{value: msg.value}("zerrow");
             
@@ -975,14 +865,16 @@ contract lstInterface {
     }
 
     function lstStakeAndDeposit(address stakeToken) public payable {
-        // iwA0GI(A0GI).deposit{value: amount}();
+
         if(stakeToken == gToken){
             iLstGimo(lstGimo).stake{value: msg.value}("zerrow");
             
         }else{
             revert("Need be a Lst Token");
         }
-        IERC20(stakeToken).safeTransfer( msg.sender, IERC20(stakeToken).balanceOf(address(this)) );
+        uint amount = IERC20(stakeToken).balanceOf(address(this));
+        IERC20(stakeToken).approve(lendingManager, amount);
+        iLendingManager(lendingManager).assetsDeposit( stakeToken, amount, msg.sender );
     }
 
     //  Assets loop Deposit, both Lst and Other high liqulity Coin
@@ -996,7 +888,6 @@ contract lstInterface {
                 amount <= msg.value,
                 "Lending Interface: amount should == msg.value"
             );
-            // iwA0GI(A0GI).deposit{value: amount}();
         } else {
             require(msg.value == 0, "Lending Interface: msg.value should == 0");
             IERC20(tokenAddr).safeTransferFrom(
@@ -1006,22 +897,36 @@ contract lstInterface {
             );
         }
 
+        uint tempAmount;
+
         for(uint i = 0; i != times; i++){
             if (tokenAddr == A0GI) {
                 if(stakeToken == gToken)
                 {
-                    iLstGimo(lstGimo).stake{value: msg.value}("zerrow");
+                    tempAmount = address(this).balance;
+                    iLstGimo(lstGimo).stake{value: tempAmount}("zerrow");
+                    tempAmount = IERC20(stakeToken).balanceOf(address(this));
+                    IERC20(stakeToken).approve(lendingManager, tempAmount);
+                    iLendingManager(lendingManager).assetsDeposit( stakeToken, tempAmount, msg.sender );
+                    amount = amount * percentage / 10000 ;
+                    iLendingManager(lendingManager).lendAsset( tokenAddr, amount, msg.sender );
+                    iwA0GI(A0GI).withdraw(IERC20(A0GI).balanceOf(address(this)));
+      
                 }else{
                     revert("Need be a Lst Token");
                 }
-                // amount = IERC20(stakeToken).balanceOf(address(this));
-                assetsDeposit(stakeToken, IERC20(stakeToken).balanceOf(address(this)));
-                amount = amount * percentage / 10000 ;
-                lendAsset2(tokenAddr, amount) ;
             } else {
-                assetsDeposit(tokenAddr, IERC20(tokenAddr).balanceOf(address(this)));
-                amount = amount * percentage / 10000 ;
-                lendAsset2(stakeToken, amount) ;
+                if(tokenAddr == stakeToken)
+                {
+                    tempAmount = IERC20(tokenAddr).balanceOf(address(this));
+                    IERC20(tokenAddr).approve(lendingManager, tempAmount);
+                    iLendingManager(lendingManager).assetsDeposit( tokenAddr, tempAmount, msg.sender );
+                    amount = amount * percentage / 10000 ;
+                    iLendingManager(lendingManager).lendAsset( tokenAddr, amount, msg.sender );
+                }else{
+                    revert("Token Not allowed");
+                }
+                
 
             }
         }
