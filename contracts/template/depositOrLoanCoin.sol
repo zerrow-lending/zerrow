@@ -8,7 +8,7 @@ import "../interfaces/iLendingManager.sol";
 import "../interfaces/iRewardMini.sol";
 
 contract depositOrLoanCoin is ERC20NoTransfer {
-    address public manager;
+    address public immutable manager;
     address public setter;
     address newsetter;
     address public OCoin;
@@ -52,11 +52,12 @@ contract depositOrLoanCoin is ERC20NoTransfer {
     //----------------------------- event -----------------------------
     event Mint(address indexed token,address mintAddress, uint amount);
     event Burn(address indexed token,address burnAddress, uint amount);
+    event RecordUpdate(bool ToF, address _userAccount,uint _value);
     //-------------------------- sys function --------------------------
 
-    function managerSetup(address _manager) external onlySetter{
-        manager = _manager;
-    }
+    // function managerSetup(address _manager) external onlySetter{
+    //     manager = _manager;
+    // }
     function rewardContractSetup(address _rewardContract) external onlySetter{
         rewardContract = _rewardContract;
     }
@@ -85,7 +86,11 @@ contract depositOrLoanCoin is ERC20NoTransfer {
         userOQCAmount[_account] += addTokens;
         OQCtotalSupply += addTokens;
 
-        iRewardMini(rewardContract).recordUpdate(_account,userOQCAmount[_account]);
+        try iRewardMini(rewardContract).recordUpdate(_account, userOQCAmount[_account]) returns (bool /*ok*/) {
+            emit RecordUpdate(true, _account, userOQCAmount[_account]);
+        } catch {
+            emit RecordUpdate(false, _account, userOQCAmount[_account]);
+        }
 
         emit Transfer(address(0), _account, _value);
         emit Mint(address(this), _account, _value);
@@ -115,7 +120,11 @@ contract depositOrLoanCoin is ERC20NoTransfer {
             OQCtotalSupply = 0;
         }
 
-        iRewardMini(rewardContract).recordUpdate(_account,userOQCAmount[_account]);
+        try iRewardMini(rewardContract).recordUpdate(_account, userOQCAmount[_account]) returns (bool /*ok*/) {
+            emit RecordUpdate(true, _account, userOQCAmount[_account]);
+        } catch {
+            emit RecordUpdate(false, _account, userOQCAmount[_account]);
+        }
 
         emit Burn(address(this), _account, _value);
         emit Transfer(_account, address(0), _value);

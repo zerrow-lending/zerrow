@@ -68,6 +68,7 @@ contract lendingManager  {
     }
 
     mapping (address=>bool) public xInterface;
+    mapping(address => mapping(address => bool)) public interfaceApproval;
 
 
     mapping(address => licensedAsset) public licensedAssets;
@@ -89,11 +90,18 @@ contract lendingManager  {
         _;
     }
     modifier onlyInterface(address user) {
-    if(xInterface[msg.sender] == false){
-        require(user == msg.sender,"Lending Manager: msg.sender Not slcInterface or user !");
+        if (msg.sender != user) {
+            require(xInterface[msg.sender],"Lending Manager: Not whitelisted interface" );
+            require(interfaceApproval[user][msg.sender],"Lending Manager: User has not approved interface");
         }
         _;
     }
+    // modifier onlyInterface(address user) {
+    // if(xInterface[msg.sender] == false){
+    //     require(user == msg.sender,"Lending Manager: msg.sender Not slcInterface or user !");
+    //     }
+    //     _;
+    // }
     //----------------------------- event -----------------------------
     event AssetsDeposit(address indexed tokenAddr, uint amount, address user);
     event WithdrawDeposit(address indexed tokenAddr, uint amount, address user);
@@ -109,7 +117,7 @@ contract lendingManager  {
                                 uint _homogeneousModeLTV,
                                 uint _bestDepositInterestRate) ;
     event UserModeSetting(address indexed user,uint8 _mode,address _userRIMAssetsAddress);
-    // event LendingInterfaceSetup(address indexed _interface);
+    event InterfaceApproval(address indexed user,address indexed iface,bool approved);
     event InterfaceSetup(address _xInterface, bool _ToF);
     event FloorOfHealthFactorSetup(uint nomal, uint homogeneous);
     event DepositAndLoanInterest(address indexed token, 
@@ -159,12 +167,19 @@ contract lendingManager  {
         emit InterfaceSetup( _xInterface, _ToF);
     }
     
+    // Allow users to approve/revoke a whitelisted interface to act on their behalf
+    function setInterfaceApproval(address iface, bool approved) external {
+        require(xInterface[iface], "Lending Manager: Interface MUST be whitelisted");
+        interfaceApproval[msg.sender][iface] = approved;
+        emit InterfaceApproval(msg.sender, iface, approved);
+    }
+    
     function setFloorOfHealthFactor(uint nomal, uint homogeneous) external onlySetter{
         nomalFloorOfHealthFactor = nomal;
         homogeneousFloorOfHealthFactor = homogeneous;
         emit FloorOfHealthFactorSetup( nomal, homogeneous);
     }
-
+    // A licensedAssets asset could NOT be fee-on-transfer asset ！
     function licensedAssetsRegister(address _asset, 
                                     uint  _maxLTV, 
                                     uint  _liqPenalty,
@@ -177,10 +192,12 @@ contract lendingManager  {
                                     bool  _isNew) public onlySetter {
         require(   _maxLTV < UPPER_SYSTEM_LIMIT
                 && _liqPenalty <= UPPER_SYSTEM_LIMIT/5
+                && _bestLendingRatio > 0
                 && _bestLendingRatio < UPPER_SYSTEM_LIMIT
                 && _homogeneousModeLTV < UPPER_SYSTEM_LIMIT
                 && _bestDepositInterestRate > 0
-                && _bestDepositInterestRate < UPPER_SYSTEM_LIMIT,"Lending Manager: Exceed UPPER_SYSTEM_LIMIT");
+                && _bestDepositInterestRate < UPPER_SYSTEM_LIMIT
+                && _reserveFactor > 0,"Lending Manager: Exceed UPPER_SYSTEM_LIMIT");
         require(licensedAssets[_asset].assetAddr == address(0),"Lending Manager: Asset already registered!");
         assetsSerialNumber.push(_asset);
         if(_isNew){
@@ -223,10 +240,12 @@ contract lendingManager  {
         require(licensedAssets[_asset].assetAddr == _asset ,"Lending Manager: asset is Not registered!");
         require(   _maxLTV < UPPER_SYSTEM_LIMIT
                 && _liqPenalty <= UPPER_SYSTEM_LIMIT/5
+                && _bestLendingRatio > 0
                 && _bestLendingRatio < UPPER_SYSTEM_LIMIT
                 && _homogeneousModeLTV < UPPER_SYSTEM_LIMIT
                 && _bestDepositInterestRate > 0
-                && _bestDepositInterestRate < UPPER_SYSTEM_LIMIT,"Lending Manager: Exceed UPPER_SYSTEM_LIMIT");
+                && _bestDepositInterestRate < UPPER_SYSTEM_LIMIT
+                && _reserveFactor > 0,"Lending Manager: Exceed UPPER_SYSTEM_LIMIT");
         licensedAssets[_asset].maximumLTV = _maxLTV;
         licensedAssets[_asset].liquidationPenalty = _liqPenalty;
         licensedAssets[_asset].maxLendingAmountInRIM = _maxLendingAmountInRIM;
@@ -449,7 +468,7 @@ contract lendingManager  {
 
         iLendingVaults(lendingVault).vaultsERC20Approve(tokenAddr, amount);
         _beforeUpdate(tokenAddr);
-        IERC20(tokenAddr).safeTransferFrom(lendingVault,msg.sender,amount);
+        IERC20(tokenAddr).safeTransferFrom(lendingVault,user,amount);
         iDepositOrLoanCoin(assetsDepositAndLend[tokenAddr][0]).burnCoin(user,amountNormalize);
         _assetsValueUpdate(tokenAddr);
         
@@ -488,7 +507,7 @@ contract lendingManager  {
         _beforeUpdate(tokenAddr);
         iDepositOrLoanCoin(assetsDepositAndLend[tokenAddr][1]).mintCoin(user,amountNormalize);
         iLendingVaults(lendingVault).vaultsERC20Approve(tokenAddr, amount);
-        IERC20(tokenAddr).safeTransferFrom(lendingVault,msg.sender,amount);
+        IERC20(tokenAddr).safeTransferFrom(lendingVault, user,amount);
         _assetsValueUpdate(tokenAddr);
 
         uint factor;

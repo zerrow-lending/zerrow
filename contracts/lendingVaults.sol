@@ -6,6 +6,7 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/iDepositOrLoanCoin.sol";
 import "./interfaces/iLendingManager.sol";
+import "./interfaces/iDecimals.sol";
 
 contract lendingVaults  {
     address public lendingManager;
@@ -54,10 +55,19 @@ contract lendingVaults  {
     }
     // function assetsDepositAndLendAddrs(address token) external view returns(address[2] memory addrs)
     function excessDisposal(address token) public onlyRebalancer(){
-        uint amountD = iDepositOrLoanCoin(iLendingManager(lendingManager).assetsDepositAndLendAddrs(token)[0]).totalSupply();
-        uint amountL = iDepositOrLoanCoin(iLendingManager(lendingManager).assetsDepositAndLendAddrs(token)[1]).totalSupply();
-        require(IERC20(token).balanceOf(address(this)) > amountD - amountL,"Lending Manager: Cant Do Excess Disposal, asset not enough!");
-        IERC20(token).safeTransfer(msg.sender,IERC20(token).balanceOf(address(this)) + amountL - amountD);
+        address[2] memory pair = iLendingManager(lendingManager).assetsDepositAndLendAddrs(token);
+        uint amountD18 = iDepositOrLoanCoin(pair[0]).totalSupply();
+        uint amountL18 = iDepositOrLoanCoin(pair[1]).totalSupply();
+
+        uint netNorm18 = amountD18 - amountL18;
+        uint d = iDecimals(token).decimals();
+        uint balRaw = IERC20(token).balanceOf(address(this));
+        uint balNorm18 = (balRaw * 1 ether) / (10 ** d);
+
+        require(balNorm18 > netNorm18,"Lending Manager: Cant Do Excess Disposal, asset not enough!");
+        uint exNorm18 = balNorm18 - netNorm18;
+        uint exRaw = (exNorm18 * (10 ** d)) / 1 ether;
+        IERC20(token).safeTransfer(msg.sender, exRaw);
     }
 
     function vaultsERC20Approve(address ERC20Addr,uint amount) external onlyManager{

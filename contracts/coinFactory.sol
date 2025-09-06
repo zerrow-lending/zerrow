@@ -12,7 +12,7 @@ contract coinFactory  {
     address public lendingManager;
     address public rewardContract;
     uint public depositType;
-    uint public LoanType;
+    uint public loanType;
     mapping(address => address) public getDepositCoin;
     mapping(address => address) public getLoanCoin;
 
@@ -40,7 +40,7 @@ contract coinFactory  {
         getDepositCoin[token] = _pAndLCoin[0];
         getLoanCoin[token] = _pAndLCoin[1];
         iRewardMini(rewardContract).factoryUsedRegist(_pAndLCoin[0], depositType);
-        iRewardMini(rewardContract).factoryUsedRegist(_pAndLCoin[1], LoanType);
+        iRewardMini(rewardContract).factoryUsedRegist(_pAndLCoin[1], loanType);
         emit DepositCoinCreated( token, _pAndLCoin[0]);
         emit LoanCoinCreatedX( token, _pAndLCoin[1]);
     }
@@ -62,15 +62,17 @@ contract coinFactory  {
         rewardContract = _rewardContract;
     }
 
-    function coinResetup(address _manager,address _rewardContract,address coinAddr) external{
+    function coinResetup(address coinAddr,address _rewardContract) external{
         require(msg.sender == setPermissionAddress, 'Coin Factory: Permission FORBIDDEN');
-        depositOrLoanCoin(coinAddr).managerSetup(_manager);
+        // depositOrLoanCoin(coinAddr).managerSetup(_manager);
         depositOrLoanCoin(coinAddr).rewardContractSetup(_rewardContract);
     }
-    function rewardTypeSetup(uint _depositType,uint _LoanType) external{
+    function rewardTypeSetup(uint _depositType,uint _loanType) external{
         require(msg.sender == setPermissionAddress, 'Coin Factory: Permission FORBIDDEN');
+        require(_depositType * _loanType > 0, 'Coin Factory: Type Must > 0');
+        require(_depositType != _loanType, 'Coin Factory: depositType and loanType Must NOT same');
         depositType = _depositType;
-        LoanType = _LoanType;
+        loanType = _loanType;
     }
 
     function setPA(address _setPermissionAddress) external {

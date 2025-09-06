@@ -97,6 +97,10 @@ interface iLendingManager{
     function lendAsset(address tokenAddr, uint amount, address user) external;
     // repay Loan
     function repayLoan(address tokenAddr,uint amount, address user) external ;
+        
+    // interface approvals for whitelisted callers
+    function setInterfaceApproval(address iface, bool approved) external;
+    function interfaceApproval(address user, address iface) external view returns (bool);
 
     // token Liquidate
     function tokenLiquidate(address user,
