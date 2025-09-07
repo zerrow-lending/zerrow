@@ -68,8 +68,9 @@ contract lendingManager is ReentrancyGuard {
     }
 
     mapping (address=>bool) public xInterface;
+    address[] public interfaceArray;
     mapping(address => mapping(address => bool)) public interfaceApproval;
-
+    
 
     mapping(address => licensedAsset) public licensedAssets;
     mapping(address => address[2]) public assetsDepositAndLend;
@@ -96,12 +97,7 @@ contract lendingManager is ReentrancyGuard {
         }
         _;
     }
-    // modifier onlyInterface(address user) {
-    // if(xInterface[msg.sender] == false){
-    //     require(user == msg.sender,"Lending Manager: msg.sender Not slcInterface or user !");
-    //     }
-    //     _;
-    // }
+
     //----------------------------- event -----------------------------
     event AssetsDeposit(address indexed tokenAddr, uint amount, address user);
     event WithdrawDeposit(address indexed tokenAddr, uint amount, address user);
@@ -163,15 +159,28 @@ contract lendingManager is ReentrancyGuard {
 
     function xInterfacesetting(address _xInterface, bool _ToF)external onlySetter{
         require(isContract(_xInterface),"Lending Manager: Interface MUST be a contract.");
-        xInterface[_xInterface] = _ToF;
+        uint lengthTemp = interfaceArray.length;
+        if(_ToF == false){
+            for(uint i = 0; i != lengthTemp; i++){
+                if(interfaceArray[i] == _xInterface){
+                    interfaceArray[i] = interfaceArray[lengthTemp -1];
+                    interfaceArray.pop();
+                }
+            }
+        }else if(xInterface[_xInterface] == false){
+            xInterface[_xInterface] = true;
+            interfaceArray.push(_xInterface);
+        }
         emit InterfaceSetup( _xInterface, _ToF);
     }
     
     // Allow users to approve/revoke a whitelisted interface to act on their behalf
-    function setInterfaceApproval(address iface, bool approved) external {
-        require(xInterface[iface], "Lending Manager: Interface MUST be whitelisted");
-        interfaceApproval[msg.sender][iface] = approved;
-        emit InterfaceApproval(msg.sender, iface, approved);
+    function setInterfaceApproval(bool approved) external {
+        uint lengthTemp = interfaceArray.length;
+        for(uint i = 0; i != lengthTemp; i++){
+            interfaceApproval[msg.sender][interfaceArray[i]] = approved;
+            emit InterfaceApproval(msg.sender, interfaceArray[i], approved);
+        }
     }
     
     function setFloorOfHealthFactor(uint normal, uint homogeneous) external onlySetter{
