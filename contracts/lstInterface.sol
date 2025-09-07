@@ -3,6 +3,7 @@
 
 pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/iLendingManager.sol";
 import "./interfaces/iwA0GI.sol";
 import "./interfaces/islcoracle.sol";
@@ -10,7 +11,7 @@ import "./interfaces/iDepositOrLoanCoin.sol";
 import "./interfaces/iLendingCoreAlgorithm.sol";
 import "./interfaces/iLstGimo.sol";
 
-contract lstInterface {
+contract lstInterface is ReentrancyGuard{
     address public lendingManager;
     address public A0GI;
     address public oracleAddr;
@@ -97,8 +98,8 @@ contract lstInterface {
         }
     }
 
-    function assetsreserveFactor(address token) public view returns(uint reserveFactor){
-        return iLendingManager(lendingManager).assetsreserveFactor(token);
+    function assetsReserveFactor(address token) public view returns(uint reserveFactor){
+        return iLendingManager(lendingManager).assetsReserveFactor(token);
     }
 
     function assetsBaseInfo(
@@ -347,7 +348,7 @@ contract lstInterface {
             token,
             lendingRatio
         );
-        uint reserveFactor = assetsreserveFactor(token);
+        uint reserveFactor = assetsReserveFactor(token);
         newInterest[1] = iLendingCoreAlgorithm(lCoreAddr).lendingInterestRate(
             token,
             lendingRatio,
@@ -362,18 +363,18 @@ contract lstInterface {
         uint _amountDeposit;
         uint _amountLending;
         uint8 _userMode = iLendingManager(lendingManager).userMode(user);
-        uint nomalFloor = nomalFloorOfHealthFactor();
+        uint normalFloor = normalFloorOfHealthFactor();
         uint homogeneousFloor = homogeneousFloorOfHealthFactor();
         (_amountDeposit, _amountLending) = iLendingManager(lendingManager)
             .userDepositAndLendingValue(user);
         if (_userMode <= 1) {
             if (
-                (_amountDeposit * 1 ether) / nomalFloor >
+                (_amountDeposit * 1 ether) / normalFloor >
                 _amountLending
             ) {
                 userLendableLimit =
                     (_amountDeposit * 1 ether) /
-                    nomalFloor -
+                    normalFloor -
                     _amountLending;
             } else {
                 userLendableLimit = 0;
@@ -412,9 +413,9 @@ contract lstInterface {
     function UPPER_SYSTEM_LIMIT() public view returns (uint) {
         return iLendingManager(lendingManager).UPPER_SYSTEM_LIMIT();
     }
-    // uint    public nomalFloorOfHealthFactor;
-    function nomalFloorOfHealthFactor() public view returns (uint) {
-        return iLendingManager(lendingManager).nomalFloorOfHealthFactor();
+    // uint    public normalFloorOfHealthFactor;
+    function normalFloorOfHealthFactor() public view returns (uint) {
+        return iLendingManager(lendingManager).normalFloorOfHealthFactor();
     }
     // uint    public homogeneousFloorOfHealthFactor;
     function homogeneousFloorOfHealthFactor() public view returns (uint) {
@@ -475,7 +476,7 @@ contract lstInterface {
                     usefulAsset = licensedAssets(tokens[i]);
                     userMaxUsedRatio =
                         (usefulAsset.maximumLTV * 1 ether) /
-                        nomalFloorOfHealthFactor();
+                        normalFloorOfHealthFactor();
                     tokenLiquidateRatio = usefulAsset.maximumLTV;
                     break;
                 }
@@ -494,7 +495,7 @@ contract lstInterface {
                         (_amountDeposit[i] *
                             assetPrice[i] *
                             usefulAsset.maximumLTV) /
-                        nomalFloorOfHealthFactor() /
+                        normalFloorOfHealthFactor() /
                         10000;
                     tokenLiquidateRatio +=
                         (((_amountDeposit[i] * assetPrice[i]) / 1 ether) *
@@ -665,7 +666,7 @@ contract lstInterface {
     }
     //-----------------------------------------loop for assets---------------------------------------------
     //  Assets single Lst Deposit
-    function lstStake(address stakeToken) public payable {
+    function lstStake(address stakeToken) public payable nonReentrant {
 
         if(stakeToken == gToken){
             iLstGimo(lstGimo).stake{value: msg.value}("zerrow");
@@ -676,7 +677,7 @@ contract lstInterface {
         IERC20(stakeToken).safeTransfer( msg.sender, IERC20(stakeToken).balanceOf(address(this)) );
     }
 
-    function lstStakeAndDeposit(address stakeToken) public payable {
+    function lstStakeAndDeposit(address stakeToken) public payable nonReentrant {
 
         if(stakeToken == gToken){
             iLstGimo(lstGimo).stake{value: msg.value}("zerrow");
@@ -694,7 +695,7 @@ contract lstInterface {
                            address stakeToken, 
                            uint    amount, 
                            uint    times, 
-                           uint    percentage) external payable {
+                           uint    percentage) external payable nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
         require(percentage <= 10000, "Percentage must be <= 10000");
         uint currentAmount = amount;

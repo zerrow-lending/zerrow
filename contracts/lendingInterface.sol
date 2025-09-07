@@ -3,13 +3,14 @@
 
 pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/iLendingManager.sol";
 import "./interfaces/iwA0GI.sol";
 import "./interfaces/islcoracle.sol";
 import "./interfaces/iDepositOrLoanCoin.sol";
 import "./interfaces/iLendingCoreAlgorithm.sol";
 
-contract lendingInterface {
+contract lendingInterface is ReentrancyGuard{
     address public lendingManager;
     address public A0GI;
     address public oracleAddr;
@@ -76,8 +77,8 @@ contract lendingInterface {
         }
     }
 
-    function assetsreserveFactor(address token) public view returns(uint reserveFactor){
-        return iLendingManager(lendingManager).assetsreserveFactor(token);
+    function assetsReserveFactor(address token) public view returns(uint reserveFactor){
+        return iLendingManager(lendingManager).assetsReserveFactor(token);
     }
 
     function assetsBaseInfo(
@@ -326,7 +327,7 @@ contract lendingInterface {
             token,
             lendingRatio
         );
-        uint reserveFactor = assetsreserveFactor(token);
+        uint reserveFactor = assetsReserveFactor(token);
         newInterest[1] = iLendingCoreAlgorithm(lCoreAddr).lendingInterestRate(
             token,
             lendingRatio,
@@ -341,18 +342,18 @@ contract lendingInterface {
         uint _amountDeposit;
         uint _amountLending;
         uint8 _userMode = iLendingManager(lendingManager).userMode(user);
-        uint nomalFloor = nomalFloorOfHealthFactor();
+        uint normalFloor = normalFloorOfHealthFactor();
         uint homogeneousFloor = homogeneousFloorOfHealthFactor();
         (_amountDeposit, _amountLending) = iLendingManager(lendingManager)
             .userDepositAndLendingValue(user);
         if (_userMode <= 1) {
             if (
-                (_amountDeposit * 1 ether) / nomalFloor >
+                (_amountDeposit * 1 ether) / normalFloor >
                 _amountLending
             ) {
                 userLendableLimit =
                     (_amountDeposit * 1 ether) /
-                    nomalFloor -
+                    normalFloor -
                     _amountLending;
             } else {
                 userLendableLimit = 0;
@@ -391,9 +392,9 @@ contract lendingInterface {
     function UPPER_SYSTEM_LIMIT() public view returns (uint) {
         return iLendingManager(lendingManager).UPPER_SYSTEM_LIMIT();
     }
-    // uint    public nomalFloorOfHealthFactor;
-    function nomalFloorOfHealthFactor() public view returns (uint) {
-        return iLendingManager(lendingManager).nomalFloorOfHealthFactor();
+    // uint    public normalFloorOfHealthFactor;
+    function normalFloorOfHealthFactor() public view returns (uint) {
+        return iLendingManager(lendingManager).normalFloorOfHealthFactor();
     }
     // uint    public homogeneousFloorOfHealthFactor;
     function homogeneousFloorOfHealthFactor() public view returns (uint) {
@@ -454,7 +455,7 @@ contract lendingInterface {
                     usefulAsset = licensedAssets(tokens[i]);
                     userMaxUsedRatio =
                         (usefulAsset.maximumLTV * 1 ether) /
-                        nomalFloorOfHealthFactor();
+                        normalFloorOfHealthFactor();
                     tokenLiquidateRatio = usefulAsset.maximumLTV;
                     break;
                 }
@@ -473,7 +474,7 @@ contract lendingInterface {
                         (_amountDeposit[i] *
                             assetPrice[i] *
                             usefulAsset.maximumLTV) /
-                        nomalFloorOfHealthFactor() /
+                        normalFloorOfHealthFactor() /
                         10000;
                     tokenLiquidateRatio +=
                         (((_amountDeposit[i] * assetPrice[i]) / 1 ether) *
@@ -636,7 +637,7 @@ contract lendingInterface {
 
     }
     //  Assets Deposit
-    function assetsDeposit(address tokenAddr, uint amount) external {
+    function assetsDeposit(address tokenAddr, uint amount) external nonReentrant{
         IERC20(tokenAddr).safeTransferFrom(msg.sender, address(this), amount);
         IERC20(tokenAddr).approve(lendingManager, amount);
         iLendingManager(lendingManager).assetsDeposit(
@@ -653,7 +654,7 @@ contract lendingInterface {
 
     }
     // Withdrawal of deposits
-    function withdrawDeposit(address tokenAddr, uint amount) external {
+    function withdrawDeposit(address tokenAddr, uint amount) external nonReentrant{
         iLendingManager(lendingManager).withdrawDeposit(
             tokenAddr,
             amount,
@@ -667,7 +668,7 @@ contract lendingInterface {
         }
 
     }
-    function withdrawDepositMax(address tokenAddr) external {
+    function withdrawDepositMax(address tokenAddr) external nonReentrant{
         address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
         uint tokenBalance = IERC20(depositAndLend[0]).balanceOf(
             address(msg.sender)
@@ -686,7 +687,7 @@ contract lendingInterface {
 
     }
     // lend Asset
-    function lendAsset(address tokenAddr, uint amount) external {
+    function lendAsset(address tokenAddr, uint amount) external nonReentrant{
         iLendingManager(lendingManager).lendAsset(
             tokenAddr,
             amount,
@@ -701,7 +702,7 @@ contract lendingInterface {
 
     }
     // repay Loan
-    function repayLoan(address tokenAddr, uint amount) external {
+    function repayLoan(address tokenAddr, uint amount) external nonReentrant{
         IERC20(tokenAddr).safeTransferFrom(msg.sender, address(this), amount);
         IERC20(tokenAddr).approve(lendingManager, amount);
         iLendingManager(lendingManager).repayLoan(
@@ -717,7 +718,7 @@ contract lendingInterface {
         }
 
     }
-    function repayLoanMax(address tokenAddr) external {
+    function repayLoanMax(address tokenAddr) external nonReentrant{
         address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
         uint tokenBalance = IERC20(depositAndLend[1]).balanceOf(
             address(msg.sender)
@@ -733,17 +734,15 @@ contract lendingInterface {
             tokenBalance,
             msg.sender
         );
-        if (IERC20(tokenAddr).balanceOf(address(this)) > 0) {
-            IERC20(tokenAddr).safeTransfer(
-                msg.sender,
-                IERC20(tokenAddr).balanceOf(address(this))
-            );
+        uint256 remainingBalance = IERC20(tokenAddr).balanceOf(address(this));
+        if (remainingBalance > 0) {
+            IERC20(tokenAddr).safeTransfer(msg.sender,remainingBalance);
         }
 
     }
     //-----------------------------------------Operation 2 can use 0g---------------------------------------------
     //  Assets Deposit
-    function assetsDeposit2(address tokenAddr, uint amount) external payable {
+    function assetsDeposit2(address tokenAddr, uint amount) external payable nonReentrant{
         if (tokenAddr == A0GI) {
             require(
                 amount <= msg.value,
@@ -782,7 +781,7 @@ contract lendingInterface {
 
     }
     // Withdrawal of deposits
-    function withdrawDeposit2(address tokenAddr, uint amount) external {
+    function withdrawDeposit2(address tokenAddr, uint amount) external nonReentrant{
         iLendingManager(lendingManager).withdrawDeposit(
             tokenAddr,
             amount,
@@ -804,7 +803,7 @@ contract lendingInterface {
         }
 
     }
-    function withdrawDepositMax2(address tokenAddr) external {
+    function withdrawDepositMax2(address tokenAddr) external nonReentrant {
         address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
         uint tokenBalance = IERC20(depositAndLend[0]).balanceOf(
             address(msg.sender)
@@ -831,7 +830,7 @@ contract lendingInterface {
 
     }
     // lend Asset
-    function lendAsset2(address tokenAddr, uint amount) external {
+    function lendAsset2(address tokenAddr, uint amount) external nonReentrant{
         iLendingManager(lendingManager).lendAsset(
             tokenAddr,
             amount,
@@ -853,7 +852,7 @@ contract lendingInterface {
 
     }
     // repay Loan
-    function repayLoan2(address tokenAddr, uint amount) external payable {
+    function repayLoan2(address tokenAddr, uint amount) external payable nonReentrant{
         if (tokenAddr == A0GI) {
             require(
                 amount <= msg.value,
@@ -890,7 +889,7 @@ contract lendingInterface {
         }
 
     }
-    function repayLoanMax2(address tokenAddr) external payable {
+    function repayLoanMax2(address tokenAddr) external payable nonReentrant {
         address[2] memory depositAndLend = assetsDepositAndLendAddrs(tokenAddr);
         uint tokenBalance = IERC20(depositAndLend[1]).balanceOf(
             address(msg.sender)

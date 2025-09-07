@@ -29,8 +29,8 @@ interface iLendingManager{
     // uint public constant UPPER_SYSTEM_LIMIT = 10000;
     function UPPER_SYSTEM_LIMIT() external view returns (uint);
 
-    // uint    public nomalFloorOfHealthFactor;
-    function nomalFloorOfHealthFactor() external view returns (uint);
+    // uint    public normalFloorOfHealthFactor;
+    function normalFloorOfHealthFactor() external view returns (uint);
     // uint    public homogeneousFloorOfHealthFactor;
     function homogeneousFloorOfHealthFactor() external view returns (uint);
 
@@ -61,7 +61,7 @@ interface iLendingManager{
     // function viewUserLendableLimit(address user) external view returns(uint userLendableLimit);
     // function assetsLiqPenaltyInfo(address token) external view returns(uint liqPenalty);
 
-    function assetsreserveFactor(address token) external view returns(uint reserveFactor);
+    function assetsReserveFactor(address token) external view returns(uint reserveFactor);
     // function assetsBaseInfo(address token) external view returns(uint maximumLTV,uint bestLendingRatio,uint lendingModeNum,uint bestDepositInterestRate);
     function assetsBaseInfo(address token) external view returns(uint maximumLTV,
                                                                uint liquidationPenalty,

@@ -34,13 +34,13 @@ contract coinFactory  {
         require(depositType != 0, 'Coin Factory: Reward Type NOT Set');
         bytes32 _salt1 = keccak256(abi.encodePacked(token,msg.sender, "Deposit Coin"));
         bytes32 _salt2 = keccak256(abi.encodePacked(token,msg.sender, "Loan Coin"));
-        //Only ERC20 Tokens Can creat pairs
+        // Only ERC20 Tokens Can create pairs
         _pAndLCoin[0] = address(new depositOrLoanCoin{salt: _salt1}(0,token,lendingManager, rewardContract, strConcat(string(ERC20(token).symbol()), " Deposit Coin"),strConcat(string(ERC20(token).symbol()), " DCoin")));  //
         _pAndLCoin[1] = address(new depositOrLoanCoin{salt: _salt2}(1,token,lendingManager, rewardContract,strConcat(string(ERC20(token).symbol()), " Loan Coin"),strConcat(string(ERC20(token).symbol()), " LCoin"))); 
         getDepositCoin[token] = _pAndLCoin[0];
         getLoanCoin[token] = _pAndLCoin[1];
-        iRewardMini(rewardContract).factoryUsedRegist(_pAndLCoin[0], depositType);
-        iRewardMini(rewardContract).factoryUsedRegist(_pAndLCoin[1], loanType);
+        iRewardMini(rewardContract).factoryUsedRegister(_pAndLCoin[0], depositType);
+        iRewardMini(rewardContract).factoryUsedRegister(_pAndLCoin[1], loanType);
         emit DepositCoinCreated( token, _pAndLCoin[0]);
         emit LoanCoinCreatedX( token, _pAndLCoin[1]);
     }
@@ -71,12 +71,15 @@ contract coinFactory  {
         require(msg.sender == setPermissionAddress, 'Coin Factory: Permission FORBIDDEN');
         require(_depositType * _loanType > 0, 'Coin Factory: Type Must > 0');
         require(_depositType != _loanType, 'Coin Factory: depositType and loanType Must NOT same');
+        require(_depositType > 0 && _depositType <= 10000,"Coin Factory: Invalid deposit type");
+        require(_loanType > 0 && _loanType <= 10000,"Coin Factory: Invalid loan type");
         depositType = _depositType;
         loanType = _loanType;
     }
 
     function setPA(address _setPermissionAddress) external {
         require(msg.sender == setPermissionAddress, 'Coin Factory: Permission FORBIDDEN');
+        require(_setPermissionAddress != address(0),'Coin Factory: Zero Address Not Allowed');
         newPermissionAddress = _setPermissionAddress;
     }
     function acceptPA(bool _TorF) external {

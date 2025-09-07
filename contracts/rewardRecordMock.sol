@@ -68,7 +68,7 @@ contract rewardRecordMock{
         
         return true;
     }
-    function factoryUsedRegist(address _token, uint256 _type) external returns(bool){
+    function factoryUsedRegister(address _token, uint256 _type) external returns(bool){
         //only factory or administrators
         tokenOrVaultType[_token] = _type;
         return true;

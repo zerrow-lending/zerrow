@@ -18,7 +18,7 @@ contract lendingCoreAlgorithm  {
         uint    latestLendingInterest;
     }
     function assetsValueUpdate(address token) public view returns(uint[2] memory latestInterest){
-        uint reserveFactor = iLendingManager(lendingManager).assetsreserveFactor( token);
+        uint reserveFactor = iLendingManager(lendingManager).assetsReserveFactor( token);
         require(reserveFactor > 0,"core: reserveFactor Must > 0");
         address[2] memory depositAndLend = iLendingManager(lendingManager).assetsDepositAndLendAddrs(token);
         uint lendingRatio;

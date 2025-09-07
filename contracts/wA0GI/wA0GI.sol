@@ -51,6 +51,8 @@ contract wA0GI {
         uint256 wad
     ) public returns (bool) {
         require(balanceOf[src] >= wad);
+        require(src != address(0), "wA0GI: transfer from the zero address");
+        require(dst != address(0), "wA0GI: transfer to the zero address");
 
         if (
             src != msg.sender && allowance[src][msg.sender] != type(uint256).max

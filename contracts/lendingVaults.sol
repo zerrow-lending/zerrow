@@ -38,6 +38,8 @@ contract lendingVaults  {
 
     //----------------------------        ----------------------------
     function transferSetter(address _set) external onlySetter{
+        require(_set != address(0),"Deposit Or Loan Coin: New setter cannot be zero address");
+        require(_set != setter,"Lending Manager: Cannot transfer to current setter");
         newsetter = _set;
     }
     function acceptSetter(bool _TorF) external {

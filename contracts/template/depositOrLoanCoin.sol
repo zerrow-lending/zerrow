@@ -62,6 +62,8 @@ contract depositOrLoanCoin is ERC20NoTransfer {
         rewardContract = _rewardContract;
     }
     function transferSetter(address _set) external onlySetter{
+        require(_set != address(0),"Deposit Or Loan Coin: New setter cannot be zero address");
+        require(_set != setter,"Lending Manager: Cannot transfer to current setter");
         newsetter = _set;
     }
     function acceptSetter(bool _TorF) external {
@@ -79,6 +81,8 @@ contract depositOrLoanCoin is ERC20NoTransfer {
     function mintCoin(address _account,uint256 _value) public onlyManager lock{
         uint addTokens;
         require(_value > 0,"Deposit Or Loan Coin: Input value MUST > 0");
+        require(_account != address(0),"Deposit Or Loan Coin: Cannot mint to zero address");
+        require(_value <= type(uint256).max / 1 ether, "Deposit Or Loan Coin: Value too large");
 
         addTokens = iLendingManager(manager).getCoinValues(OCoin)[depositOrLoan];
 
